@@ -261,34 +261,34 @@ export default function CasesPage() {
         </div>
 
         {/* Cases List */}
-        <div className="space-y-3">
-          {filteredCases.length === 0 ? (
-            <div className="bg-white rounded-xl p-12 text-center" style={{ boxShadow: 'var(--shadow)' }}>
-              <FileText className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--color-text-secondary)', opacity: 0.3 }} />
-              <p className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
-                {searchQuery ? "Кейсы не найдены" : "Нет test cases"}
-              </p>
-              <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
-                {searchQuery
-                  ? "Попробуйте изменить параметры поиска"
-                  : "Создайте первый тестовый кейс"}
-              </p>
-              {!searchQuery && (
-                <Link
-                  href="/cases/new"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all"
-                  style={{ background: 'var(--color-text)', color: 'white', boxShadow: 'var(--shadow)' }}
-                >
-                  <Plus className="w-4 h-4" />
-                  Создать Case
-                </Link>
-              )}
-            </div>
-          ) : (
-            filteredCases.map((c) => (
+        {filteredCases.length === 0 ? (
+          <div className="bg-white rounded-xl p-12 text-center" style={{ boxShadow: 'var(--shadow)' }}>
+            <FileText className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--color-text-secondary)', opacity: 0.3 }} />
+            <p className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
+              {searchQuery ? "Кейсы не найдены" : "Нет test cases"}
+            </p>
+            <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+              {searchQuery
+                ? "Попробуйте изменить параметры поиска"
+                : "Создайте первый тестовый кейс"}
+            </p>
+            {!searchQuery && (
+              <Link
+                href="/cases/new"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all"
+                style={{ background: 'var(--color-text)', color: 'white', boxShadow: 'var(--shadow)' }}
+              >
+                <Plus className="w-4 h-4" />
+                Создать Case
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredCases.map((c) => (
               <div
                 key={c.id}
-                className="bg-white rounded-xl p-6 group transition-all"
+                className="bg-white rounded-xl p-5 group transition-all flex flex-col"
                 style={{ boxShadow: 'var(--shadow)' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
@@ -299,75 +299,73 @@ export default function CasesPage() {
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {c.title}
-                        </h3>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full border font-medium ${getPriorityClasses(c.priority)}`}
-                        >
-                          {c.priority}
-                        </span>
-                        <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-300 uppercase font-medium">
-                          {c.type}
-                        </span>
-                      </div>
-
-                      <div className="text-sm text-gray-600 mb-3">
-                        {c.steps.length} {c.steps.length === 1 ? "шаг" : "шагов"}
-                        {" • "}ID: {c.id}
-                      </div>
-
-                      <div className="space-y-1">
-                        {c.steps.slice(0, 2).map((step) => (
-                          <div
-                            key={step.n}
-                            className="text-sm text-gray-600 flex gap-2"
-                          >
-                            <span className="font-medium text-gray-400">
-                              {step.n}.
-                            </span>
-                            <span className="flex-1">{step.action}</span>
-                          </div>
-                        ))}
-                        {c.steps.length > 2 && (
-                          <div className="text-sm text-gray-400 italic">
-                            + еще {c.steps.length - 2} шаг(ов)
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleEdit(c.id)}
-                        className="p-2 hover:bg-blue-50 text-blue-800 rounded-lg transition-colors"
-                        title="Редактировать"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleCopy(c.id)}
-                        className="p-2 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors"
-                        title="Копировать"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
-                        title="Удалить"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex flex-wrap gap-2">
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full border font-semibold ${getPriorityClasses(c.priority)}`}
+                    >
+                      {c.priority}
+                    </span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-300 uppercase font-semibold">
+                      {c.type}
+                    </span>
                   </div>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleEdit(c.id)}
+                      className="p-1.5 hover:bg-blue-50 text-blue-800 rounded-lg transition-colors"
+                      title="Редактировать"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleCopy(c.id)}
+                      className="p-1.5 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors"
+                      title="Копировать"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(c.id)}
+                      className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                      title="Удалить"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <h3 className="font-bold text-base mb-2 line-clamp-2" style={{ color: 'var(--color-text)' }}>
+                  {c.title}
+                </h3>
+
+                <div className="text-xs mb-3" style={{ color: 'var(--color-text-secondary)' }}>
+                  {c.steps.length} {c.steps.length === 1 ? "шаг" : "шагов"} • ID: {c.id}
+                </div>
+
+                <div className="space-y-1.5 flex-1">
+                  {c.steps.slice(0, 2).map((step) => (
+                    <div
+                      key={step.n}
+                      className="text-xs flex gap-2"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
+                      <span className="font-semibold text-gray-400 flex-shrink-0">
+                        {step.n}.
+                      </span>
+                      <span className="line-clamp-2">{step.action}</span>
+                    </div>
+                  ))}
+                  {c.steps.length > 2 && (
+                    <div className="text-xs text-gray-400 italic">
+                      + еще {c.steps.length - 2}
+                    </div>
+                  )}
+                </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Edit Modal */}
