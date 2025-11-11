@@ -2,43 +2,25 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { CaseRow } from "@/components/CaseRow";
-import { CaseStatus } from "@/components/StatusPicker";
 import { CaseDetailModal } from "@/components/CaseDetailModal";
+import { ToastProvider, useToast } from "@/components/Toast";
+import { CaseStatus, FilterType, RunPayload } from "@/lib/types";
+import { debounce } from "@/lib/utils";
+import {
+  Search,
+  Filter,
+  Send,
+  Wifi,
+  WifiOff,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Ban,
+  SkipForward,
+  Circle,
+} from "lucide-react";
 
-type TestStep = {
-  n: number;
-  action: string;
-  expected: string;
-};
-
-type TestCase = {
-  id: string;
-  title: string;
-  priority: "P0" | "P1" | "P2" | "P3";
-  type: string;
-  steps: TestStep[];
-};
-
-type Evidence = {
-  kind: "screenshot";
-  url: string;
-  name?: string;
-};
-
-type CaseResult = {
-  status: CaseStatus;
-  notes?: string;
-  evidence?: Evidence[];
-};
-
-type RunPayload = {
-  suite: { cases: TestCase[] };
-  results: Record<string, CaseResult>;
-};
-
-type FilterType = "ALL" | "P0" | "P1" | "P2" | "P3" | "FAIL" | "PENDING";
-
-export default function RunPage({
+function RunPageContent({
   params,
 }: {
   params: Promise<{ runId: string }>;
@@ -47,11 +29,14 @@ export default function RunPage({
   const [data, setData] = useState<RunPayload | null>(null);
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<FilterType>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [pendingUpdates, setPendingUpdates] = useState<
-    Array<{ caseId: string; update: Partial<CaseResult> }>
+    Array<{ caseId: string; update: Partial<CaseStatus> }>
   >([]);
+
+  const { showToast } = useToast();
 
   // Unwrap params
   useEffect(() => {
@@ -76,19 +61,27 @@ export default function RunPage({
         localStorage.setItem(`run_${runId}`, JSON.stringify(payload));
       } catch (error) {
         console.error("Failed to load run:", error);
+        showToast("Ошибка загрузки данных", "error");
         // Try to use cached data
         const cached = localStorage.getItem(`run_${runId}`);
         if (cached) {
           setData(JSON.parse(cached));
+          showToast("Загружены данные из кэша", "info");
         }
       }
     })();
-  }, [runId]);
+  }, [runId, showToast]);
 
   // Online/offline detection
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      setIsOnline(true);
+      showToast("Соединение восстановлено", "success");
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      showToast("Соединение потеряно. Работаем offline", "info");
+    };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -97,7 +90,7 @@ export default function RunPage({
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, []);
+  }, [showToast]);
 
   // Retry pending updates when coming online
   useEffect(() => {
@@ -115,9 +108,10 @@ export default function RunPage({
           }
         }
         setPendingUpdates([]);
+        showToast("Изменения синхронизированы", "success");
       })();
     }
-  }, [isOnline, pendingUpdates, runId]);
+  }, [isOnline, pendingUpdates, runId, showToast]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -153,6 +147,8 @@ export default function RunPage({
   const cases = useMemo(() => {
     if (!data) return [];
     let arr = data.suite.cases;
+
+    // Apply filter
     if (filter === "P0" || filter === "P1" || filter === "P2" || filter === "P3") {
       arr = arr.filter((c) => c.priority === filter);
     }
@@ -164,11 +160,24 @@ export default function RunPage({
         (c) => (data.results[c.id]?.status ?? "NONE") === "NONE"
       );
     }
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      arr = arr.filter(
+        (c) =>
+          c.title.toLowerCase().includes(query) ||
+          c.type.toLowerCase().includes(query) ||
+          c.id.toLowerCase().includes(query)
+      );
+    }
+
     return arr;
-  }, [data, filter]);
+  }, [data, filter, searchQuery]);
 
   const summary = useMemo(() => {
-    if (!data) return { total: 0, pass: 0, fail: 0, blocked: 0, skip: 0, none: 0 };
+    if (!data)
+      return { total: 0, pass: 0, fail: 0, blocked: 0, skip: 0, none: 0 };
     const st = data.suite.cases.map(
       (c) => data.results[c.id]?.status ?? "NONE"
     );
@@ -180,6 +189,37 @@ export default function RunPage({
     const none = st.filter((x) => x === "NONE").length;
     return { total, pass, fail, blocked, skip, none };
   }, [data]);
+
+  // Debounced save function
+  const debouncedSave = useMemo(
+    () =>
+      debounce(async (runId: string, caseId: string, update: any) => {
+        setSaving(true);
+        try {
+          if (isOnline) {
+            await fetch(`/api/runs/${runId}/results/${caseId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(update),
+            });
+          } else {
+            setPendingUpdates((prev) => [
+              ...prev.filter((p) => p.caseId !== caseId),
+              { caseId, update },
+            ]);
+          }
+        } catch (error) {
+          console.error("Failed to save:", error);
+          setPendingUpdates((prev) => [
+            ...prev.filter((p) => p.caseId !== caseId),
+            { caseId, update },
+          ]);
+        } finally {
+          setSaving(false);
+        }
+      }, 500),
+    [isOnline]
+  );
 
   const setStatus = useCallback(
     async (caseId: string, status: CaseStatus) => {
@@ -201,36 +241,13 @@ export default function RunPage({
         setSelectedCase(caseId);
       }
 
-      setSaving(true);
-      try {
-        if (isOnline) {
-          await fetch(`/api/runs/${runId}/results/${caseId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status }),
-          });
-        } else {
-          // Queue for later
-          setPendingUpdates((prev) => [
-            ...prev.filter((p) => p.caseId !== caseId),
-            { caseId, update: { status } },
-          ]);
-        }
-      } catch (error) {
-        console.error("Failed to save:", error);
-        setPendingUpdates((prev) => [
-          ...prev.filter((p) => p.caseId !== caseId),
-          { caseId, update: { status } },
-        ]);
-      } finally {
-        setSaving(false);
-      }
+      debouncedSave(runId, caseId, { status });
     },
-    [data, runId, isOnline]
+    [data, runId, debouncedSave]
   );
 
   const updateCaseResult = useCallback(
-    async (caseId: string, update: Partial<CaseResult>) => {
+    async (caseId: string, update: any) => {
       if (!data || !runId) return;
 
       // Optimistic update
@@ -244,31 +261,9 @@ export default function RunPage({
       // Save to localStorage
       localStorage.setItem(`run_${runId}`, JSON.stringify(next));
 
-      setSaving(true);
-      try {
-        if (isOnline) {
-          await fetch(`/api/runs/${runId}/results/${caseId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(next.results[caseId]),
-          });
-        } else {
-          setPendingUpdates((prev) => [
-            ...prev.filter((p) => p.caseId !== caseId),
-            { caseId, update: next.results[caseId] },
-          ]);
-        }
-      } catch (error) {
-        console.error("Failed to save:", error);
-        setPendingUpdates((prev) => [
-          ...prev.filter((p) => p.caseId !== caseId),
-          { caseId, update: next.results[caseId] },
-        ]);
-      } finally {
-        setSaving(false);
-      }
+      debouncedSave(runId, caseId, next.results[caseId]);
     },
-    [data, runId, isOnline]
+    [data, runId, debouncedSave]
   );
 
   async function completeRun() {
@@ -281,8 +276,9 @@ export default function RunPage({
     );
 
     if (p0Incomplete.length > 0) {
-      alert(
-        `Нельзя завершить Run: есть незавершенные P0 кейсы (${p0Incomplete.length})`
+      showToast(
+        `Нельзя завершить Run: есть ${p0Incomplete.length} незавершенных P0 кейсов`,
+        "error"
       );
       return;
     }
@@ -292,20 +288,21 @@ export default function RunPage({
         method: "POST",
       });
       if (res.ok) {
-        alert("Отчёт отправлен. Спасибо!");
+        showToast("Отчёт успешно отправлен! Спасибо за работу 🎉", "success");
       } else {
-        alert("Ошибка при отправке отчёта");
+        showToast("Ошибка при отправке отчёта", "error");
       }
     } catch (error) {
-      alert("Ошибка при отправке отчёта");
+      showToast("Ошибка при отправке отчёта", "error");
     }
   }
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-lg font-medium">Загрузка...</div>
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <div className="text-lg font-medium text-gray-700">Загрузка...</div>
         </div>
       </div>
     );
@@ -315,40 +312,130 @@ export default function RunPage({
     ? data.suite.cases.find((c) => c.id === selectedCase)
     : null;
 
+  const statusIcons = {
+    PASS: CheckCircle2,
+    FAIL: XCircle,
+    BLOCKED: Ban,
+    SKIP: SkipForward,
+    NONE: Circle,
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6 space-y-4">
-        <header className="bg-white rounded-lg shadow-sm p-6 space-y-4">
-          <div className="flex items-start justify-between gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
+        {/* Header Card */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4 border-2 border-gray-100">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-2xl font-bold">Test Run Checklist</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Всего {summary.total} · ✅ {summary.pass} · ❌ {summary.fail} ·
-                🚫 {summary.blocked} · ⏭ {summary.skip} · ⬜ {summary.none}
-              </p>
-              <div className="flex items-center gap-2 mt-2">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Test Run Checklist
+              </h1>
+              <div className="flex items-center gap-4 mt-3 flex-wrap">
+                {/* Summary stats */}
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-gray-600">Всего:</span>
+                  <span className="font-bold text-gray-900">{summary.total}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <span className="font-bold text-green-700">{summary.pass}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <XCircle className="w-4 h-4 text-red-600" />
+                  <span className="font-bold text-red-700">{summary.fail}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Ban className="w-4 h-4 text-orange-600" />
+                  <span className="font-bold text-orange-700">{summary.blocked}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SkipForward className="w-4 h-4 text-blue-600" />
+                  <span className="font-bold text-blue-700">{summary.skip}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Circle className="w-4 h-4 text-gray-400" />
+                  <span className="font-bold text-gray-600">{summary.none}</span>
+                </div>
+              </div>
+
+              {/* Status badges */}
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
                 {saving && (
-                  <span className="text-xs text-blue-600">Сохранение...</span>
+                  <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Сохранение...
+                  </span>
                 )}
                 {!isOnline && (
-                  <span className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                  <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
+                    <WifiOff className="w-3 h-3" />
                     Offline режим
                   </span>
                 )}
+                {isOnline && (
+                  <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">
+                    <Wifi className="w-3 h-3" />
+                    Online
+                  </span>
+                )}
                 {pendingUpdates.length > 0 && (
-                  <span className="text-xs px-2 py-1 rounded bg-orange-100 text-orange-800">
+                  <span className="text-xs px-2 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
                     {pendingUpdates.length} в очереди
                   </span>
                 )}
               </div>
             </div>
-            <div className="flex gap-2 items-start">
+
+            <button
+              onClick={completeRun}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-black text-white font-medium hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl hover:scale-105"
+            >
+              <Send className="w-4 h-4" />
+              Отправить отчёт
+            </button>
+          </div>
+
+          {/* Progress bar */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-600">Прогресс</span>
+              <span className="text-sm font-bold text-gray-900">
+                {summary.total > 0
+                  ? Math.round((summary.pass / summary.total) * 100)
+                  : 0}
+                %
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+              <div
+                className="bg-gradient-to-r from-green-500 to-green-600 h-3 transition-all duration-500 ease-out shadow-sm"
+                style={{
+                  width: `${summary.total > 0 ? (summary.pass / summary.total) * 100 : 0}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Search and filters */}
+          <div className="flex gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Поиск кейсов..."
+                className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <select
-                className="border rounded px-3 py-2 text-sm bg-white"
+                className="pl-10 pr-8 py-2 border-2 border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none cursor-pointer font-medium"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value as FilterType)}
               >
-                <option value="ALL">Все</option>
+                <option value="ALL">Все кейсы</option>
                 <option value="P0">P0</option>
                 <option value="P1">P1</option>
                 <option value="P2">P2</option>
@@ -356,36 +443,34 @@ export default function RunPage({
                 <option value="FAIL">Только FAIL</option>
                 <option value="PENDING">Только Pending</option>
               </select>
-              <button
-                onClick={completeRun}
-                className="px-4 py-2 rounded bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                Отправить отчёт
-              </button>
             </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-green-600 h-2 transition-all duration-300"
-              style={{
-                width: `${summary.total > 0 ? (summary.pass / summary.total) * 100 : 0}%`,
-              }}
-            />
-          </div>
-
           {/* Keyboard shortcuts hint */}
-          <div className="text-xs text-gray-500 bg-gray-50 rounded p-2">
-            Горячие клавиши: 1=PASS, 2=FAIL, 3=BLOCKED, 4=SKIP (в открытой
-            карточке)
+          <div className="text-xs text-gray-600 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
+            <span className="font-semibold">Горячие клавиши:</span> 1=PASS,
+            2=FAIL, 3=BLOCKED, 4=SKIP (в открытой карточке)
           </div>
-        </header>
+        </div>
 
-        <div className="grid gap-3">
+        {/* Cases Grid */}
+        <div className="grid gap-4">
           {cases.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center text-gray-500">
-              Нет кейсов по выбранному фильтру
+            <div className="bg-white rounded-2xl shadow-lg p-12 text-center border-2 border-gray-100">
+              <Circle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-lg font-medium text-gray-500">
+                {searchQuery.trim()
+                  ? "Кейсы не найдены"
+                  : "Нет кейсов по выбранному фильтру"}
+              </p>
+              {searchQuery.trim() && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="mt-4 px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Очистить поиск
+                </button>
+              )}
             </div>
           ) : (
             cases.map((c) => (
@@ -417,5 +502,17 @@ export default function RunPage({
         />
       )}
     </div>
+  );
+}
+
+export default function RunPage({
+  params,
+}: {
+  params: Promise<{ runId: string }>;
+}) {
+  return (
+    <ToastProvider>
+      <RunPageContent params={params} />
+    </ToastProvider>
   );
 }
