@@ -85,7 +85,7 @@ export default function SuitesPage() {
                 </Link>
                 <Link
                   href="/suites"
-                  className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium"
+                  className="px-4 py-2 rounded-lg bg-blue-50 text-blue-900 font-medium"
                 >
                   Test Suites
                 </Link>
@@ -112,10 +112,10 @@ export default function SuitesPage() {
             <div className="text-3xl font-bold text-gray-900">{suites.length}</div>
           </div>
           <div className="bg-white rounded-xl p-6 border-2 border-blue-100 shadow-sm">
-            <div className="text-sm font-medium text-blue-700 mb-1">
+            <div className="text-sm font-medium text-blue-900 mb-1">
               Всего кейсов
             </div>
-            <div className="text-3xl font-bold text-blue-700">
+            <div className="text-3xl font-bold text-blue-900">
               {suites.reduce((sum, s) => sum + s.caseCount, 0)}
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function SuitesPage() {
           {suites.map((suite) => (
             <div
               key={suite.id}
-              className="bg-white rounded-xl shadow-lg border-2 border-gray-100 hover:border-blue-200 transition-all overflow-hidden group"
+              className="bg-white rounded-xl shadow-lg border-2 border-gray-100 hover:border-blue-300 transition-all overflow-hidden group"
             >
               <div className="p-6 space-y-4">
                 <div className="flex items-start justify-between">
@@ -142,7 +142,7 @@ export default function SuitesPage() {
                     </h3>
                     <p className="text-sm text-gray-600">{suite.description}</p>
                   </div>
-                  <ListChecks className="w-8 h-8 text-blue-600 flex-shrink-0" />
+                  <ListChecks className="w-8 h-8 text-blue-800 flex-shrink-0" />
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -183,8 +183,8 @@ export default function SuitesPage() {
             href="/suites/new"
             className="bg-white rounded-xl shadow-lg border-2 border-dashed border-gray-300 hover:border-blue-400 transition-all p-6 flex flex-col items-center justify-center text-center group min-h-[200px]"
           >
-            <Plus className="w-12 h-12 text-gray-400 group-hover:text-blue-600 mb-3 group-hover:scale-110 transition-transform" />
-            <h3 className="font-semibold text-gray-700 group-hover:text-blue-600 transition-colors mb-1">
+            <Plus className="w-12 h-12 text-gray-400 group-hover:text-blue-800 mb-3 group-hover:scale-110 transition-transform" />
+            <h3 className="font-semibold text-gray-700 group-hover:text-blue-800 transition-colors mb-1">
               Создать новый набор
             </h3>
             <p className="text-sm text-gray-500">

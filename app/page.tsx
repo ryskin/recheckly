@@ -38,14 +38,14 @@ export default function Home() {
                 <LayoutDashboard className="w-8 h-8 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-800 transition-colors">
                   QA Dashboard
                 </h2>
                 <p className="text-gray-600 mb-4">
                   Управляйте тест-кейсами, создавайте наборы и запускайте test runs
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
+                  <span className="text-xs px-2 py-1 bg-blue-50 text-blue-900 rounded-full font-medium">
                     Test Cases
                   </span>
                   <span className="text-xs px-2 py-1 bg-purple-50 text-purple-700 rounded-full font-medium">
@@ -81,7 +81,7 @@ export default function Home() {
                   <span className="text-xs px-2 py-1 bg-orange-50 text-orange-700 rounded-full font-medium">
                     Offline Mode
                   </span>
-                  <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
+                  <span className="text-xs px-2 py-1 bg-blue-50 text-blue-900 rounded-full font-medium">
                     Auto-save
                   </span>
                 </div>
@@ -93,7 +93,7 @@ export default function Home() {
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-100">
-            <FileText className="w-10 h-10 text-blue-600 mb-3" />
+            <FileText className="w-10 h-10 text-blue-800 mb-3" />
             <h3 className="font-bold text-gray-900 mb-2">Создавайте кейсы</h3>
             <p className="text-sm text-gray-600">
               Описывайте тест-кейсы с шагами, приоритетами и типами

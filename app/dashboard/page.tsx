@@ -80,7 +80,7 @@ export default function DashboardPage() {
   const statusConfig = {
     in_progress: {
       label: "В процессе",
-      color: "bg-blue-100 text-blue-700 border-blue-200",
+      color: "bg-blue-100 text-blue-900 border-blue-300",
       icon: PlayCircle,
     },
     completed: {
@@ -129,7 +129,7 @@ export default function DashboardPage() {
               <nav className="flex gap-1">
                 <Link
                   href="/dashboard"
-                  className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium"
+                  className="px-4 py-2 rounded-lg bg-blue-50 text-blue-900 font-medium"
                 >
                   Runs
                 </Link>
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                         <div className="flex items-center gap-3 mb-2">
                           <Link
                             href={`/runs/${run.id}`}
-                            className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                            className="text-lg font-semibold text-gray-900 hover:text-blue-800 transition-colors"
                           >
                             {run.name}
                           </Link>
@@ -316,9 +316,9 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
             href="/cases/new"
-            className="p-6 bg-white rounded-xl border-2 border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all group"
+            className="p-6 bg-white rounded-xl border-2 border-gray-100 hover:border-blue-300 hover:shadow-lg transition-all group"
           >
-            <Plus className="w-8 h-8 text-blue-600 mb-3 group-hover:scale-110 transition-transform" />
+            <Plus className="w-8 h-8 text-blue-800 mb-3 group-hover:scale-110 transition-transform" />
             <h3 className="font-semibold text-gray-900 mb-1">Создать Test Case</h3>
             <p className="text-sm text-gray-600">
               Добавьте новый тестовый кейс в библиотеку
@@ -327,9 +327,9 @@ export default function DashboardPage() {
 
           <Link
             href="/suites/new"
-            className="p-6 bg-white rounded-xl border-2 border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all group"
+            className="p-6 bg-white rounded-xl border-2 border-gray-100 hover:border-blue-300 hover:shadow-lg transition-all group"
           >
-            <ListChecks className="w-8 h-8 text-blue-600 mb-3 group-hover:scale-110 transition-transform" />
+            <ListChecks className="w-8 h-8 text-blue-800 mb-3 group-hover:scale-110 transition-transform" />
             <h3 className="font-semibold text-gray-900 mb-1">Создать Test Suite</h3>
             <p className="text-sm text-gray-600">
               Сгруппируйте кейсы в тестовый набор
@@ -338,9 +338,9 @@ export default function DashboardPage() {
 
           <Link
             href="/dashboard/reports"
-            className="p-6 bg-white rounded-xl border-2 border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all group"
+            className="p-6 bg-white rounded-xl border-2 border-gray-100 hover:border-blue-300 hover:shadow-lg transition-all group"
           >
-            <TrendingUp className="w-8 h-8 text-blue-600 mb-3 group-hover:scale-110 transition-transform" />
+            <TrendingUp className="w-8 h-8 text-blue-800 mb-3 group-hover:scale-110 transition-transform" />
             <h3 className="font-semibold text-gray-900 mb-1">Отчеты</h3>
             <p className="text-sm text-gray-600">
               Анализ результатов и статистика

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Search, Plus, Trash2, Save, GripVertical, CheckCircle2 } from "lucide-react";
 import { TestCase } from "@/lib/types";
+import { getPriorityClasses } from "@/lib/utils";
 
 export default function NewRunPage() {
   const router = useRouter();
@@ -111,12 +112,6 @@ export default function NewRunPage() {
     }
   };
 
-  const prioColors = {
-    P0: "bg-red-100 text-red-700 border-red-200",
-    P1: "bg-orange-100 text-orange-700 border-orange-200",
-    P2: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    P3: "bg-gray-100 text-gray-700 border-gray-200",
-  };
 
   if (loading) {
     return (
@@ -187,10 +182,10 @@ export default function NewRunPage() {
             <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                  <CheckCircle2 className="w-5 h-5 text-blue-800" />
                   Выбранные тесты
                 </h2>
-                <span className="text-sm font-semibold text-blue-600">{selectedCases.length} кейсов</span>
+                <span className="text-sm font-semibold text-blue-800">{selectedCases.length} кейсов</span>
               </div>
 
               <div
@@ -213,7 +208,7 @@ export default function NewRunPage() {
                             <span className="text-xs font-bold text-gray-400 mt-1">{index + 1}.</span>
                             <div className="flex-1">
                               <h3 className="text-sm font-semibold text-gray-900 mb-1">{testCase.title}</h3>
-                              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${prioColors[testCase.priority]}`}>
+                              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${getPriorityClasses(testCase.priority)}`}>
                                 {testCase.priority}
                               </span>
                             </div>
@@ -260,21 +255,21 @@ export default function NewRunPage() {
                       key={testCase.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, testCase)}
-                      className="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-100 rounded-lg p-3 hover:border-blue-200 hover:shadow-md cursor-move group"
+                      className="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-100 rounded-lg p-3 hover:border-blue-300 hover:shadow-md cursor-move group"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-2 flex-1">
                           <GripVertical className="w-4 h-4 text-gray-300 mt-1" />
                           <div className="flex-1">
                             <h3 className="text-sm font-semibold text-gray-900 mb-1">{testCase.title}</h3>
-                            <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${prioColors[testCase.priority]}`}>
+                            <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${getPriorityClasses(testCase.priority)}`}>
                               {testCase.priority}
                             </span>
                           </div>
                         </div>
                         <button
                           onClick={() => addCase(testCase)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100"
+                          className="p-1.5 text-blue-800 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
@@ -287,7 +282,7 @@ export default function NewRunPage() {
           </div>
         </div>
 
-        <div className="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-4">
+        <div className="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl p-4">
           <p className="text-sm text-blue-800">
             <span className="font-semibold">💡 Совет:</span> Перетаскивайте тест-кейсы из правой панели в корзину слева или используйте кнопку +
           </p>

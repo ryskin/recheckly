@@ -301,7 +301,7 @@ function RunPageContent({
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-blue-800 mx-auto mb-4" />
           <div className="text-lg font-medium text-gray-700">Загрузка...</div>
         </div>
       </div>
@@ -349,8 +349,8 @@ function RunPageContent({
                   <span className="font-bold text-orange-700">{summary.blocked}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <SkipForward className="w-4 h-4 text-blue-600" />
-                  <span className="font-bold text-blue-700">{summary.skip}</span>
+                  <SkipForward className="w-4 h-4 text-blue-800" />
+                  <span className="font-bold text-blue-900">{summary.skip}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Circle className="w-4 h-4 text-gray-400" />
@@ -361,7 +361,7 @@ function RunPageContent({
               {/* Status badges */}
               <div className="flex items-center gap-2 mt-3 flex-wrap">
                 {saving && (
-                  <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                  <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-300">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     Сохранение...
                   </span>
@@ -466,7 +466,7 @@ function RunPageContent({
               {searchQuery.trim() && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="mt-4 px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="mt-4 px-4 py-2 text-sm text-blue-800 hover:text-blue-900 font-medium"
                 >
                   Очистить поиск
                 </button>

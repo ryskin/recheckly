@@ -268,7 +268,7 @@ export default function NewCasePage() {
           </div>
 
           {/* Preview */}
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+          <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4">
             <div className="text-sm text-blue-800">
               <p className="font-semibold mb-1">💡 Совет:</p>
               <p>

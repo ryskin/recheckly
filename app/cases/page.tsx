@@ -12,6 +12,7 @@ import {
   Copy,
 } from "lucide-react";
 import { TestCase } from "@/lib/types";
+import { getPriorityClasses, PRIORITY_COLORS } from "@/lib/utils";
 
 export default function CasesPage() {
   const [cases, setCases] = useState<TestCase[]>([]);
@@ -123,12 +124,6 @@ export default function CasesPage() {
     // В реальности: await fetch(`/api/cases/${editingCase.id}`, { method: 'PUT', body: JSON.stringify(editingCase) })
   };
 
-  const prioColors = {
-    P0: "bg-red-100 text-red-700 border-red-200",
-    P1: "bg-orange-100 text-orange-700 border-orange-200",
-    P2: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    P3: "bg-gray-100 text-gray-700 border-gray-200",
-  };
 
   if (loading) {
     return (
@@ -160,7 +155,7 @@ export default function CasesPage() {
                 </Link>
                 <Link
                   href="/cases"
-                  className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium"
+                  className="px-4 py-2 rounded-lg bg-blue-50 text-blue-900 font-medium"
                 >
                   Test Cases
                 </Link>
@@ -193,7 +188,7 @@ export default function CasesPage() {
           {(["P0", "P1", "P2", "P3"] as const).map((p) => (
             <div
               key={p}
-              className={`rounded-xl p-6 border-2 shadow-sm ${prioColors[p]}`}
+              className={`rounded-xl p-6 border-2 shadow-sm ${getPriorityClasses(p)}`}
             >
               <div className="text-sm font-medium mb-1">{p}</div>
               <div className="text-3xl font-bold">
@@ -285,11 +280,11 @@ export default function CasesPage() {
                           {c.title}
                         </h3>
                         <span
-                          className={`text-xs px-2 py-1 rounded-full border font-medium ${prioColors[c.priority]}`}
+                          className={`text-xs px-2 py-1 rounded-full border font-medium ${getPriorityClasses(c.priority)}`}
                         >
                           {c.priority}
                         </span>
-                        <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 uppercase font-medium">
+                        <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-300 uppercase font-medium">
                           {c.type}
                         </span>
                       </div>
@@ -322,7 +317,7 @@ export default function CasesPage() {
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleEdit(c.id)}
-                        className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                        className="p-2 hover:bg-blue-50 text-blue-800 rounded-lg transition-colors"
                         title="Редактировать"
                       >
                         <Edit className="w-4 h-4" />
