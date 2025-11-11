@@ -137,31 +137,38 @@ export default function CasesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="bg-white" style={{ boxShadow: 'var(--shadow-sm)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="text-2xl font-bold text-gray-900">
+            <div className="flex items-center gap-6">
+              <Link href="/" className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
                 Recheckly
               </Link>
-              <nav className="flex gap-1">
+              <nav className="flex gap-2">
                 <Link
                   href="/dashboard"
-                  className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium"
+                  className="px-4 py-2 rounded-lg font-medium transition-colors"
+                  style={{ color: 'var(--color-text-secondary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
                   Runs
                 </Link>
                 <Link
                   href="/cases"
-                  className="px-4 py-2 rounded-lg bg-blue-50 text-blue-900 font-medium"
+                  className="px-4 py-2 rounded-lg font-medium"
+                  style={{ background: 'var(--color-primary)', color: 'var(--color-text)' }}
                 >
                   Test Cases
                 </Link>
                 <Link
                   href="/suites"
-                  className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium"
+                  className="px-4 py-2 rounded-lg font-medium transition-colors"
+                  style={{ color: 'var(--color-text-secondary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#F3F4F6'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
                   Test Suites
                 </Link>
@@ -169,7 +176,16 @@ export default function CasesPage() {
             </div>
             <Link
               href="/cases/new"
-              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl font-medium"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all"
+              style={{ background: 'var(--color-text)', color: 'white', boxShadow: 'var(--shadow)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'var(--shadow)';
+              }}
             >
               <Plus className="w-4 h-4" />
               Создать Case
@@ -181,17 +197,18 @@ export default function CasesPage() {
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="bg-white rounded-xl p-6 border-2 border-gray-100 shadow-sm">
-            <div className="text-sm font-medium text-gray-600 mb-1">Всего</div>
-            <div className="text-3xl font-bold text-gray-900">{cases.length}</div>
+          <div className="bg-white rounded-xl p-6" style={{ boxShadow: 'var(--shadow)' }}>
+            <div className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-secondary)' }}>Всего</div>
+            <div className="text-4xl font-bold" style={{ color: 'var(--color-text)' }}>{cases.length}</div>
           </div>
           {(["P0", "P1", "P2", "P3"] as const).map((p) => (
             <div
               key={p}
-              className={`rounded-xl p-6 border-2 shadow-sm ${getPriorityClasses(p)}`}
+              className={`rounded-xl p-6 ${getPriorityClasses(p)}`}
+              style={{ boxShadow: 'var(--shadow)' }}
             >
-              <div className="text-sm font-medium mb-1">{p}</div>
-              <div className="text-3xl font-bold">
+              <div className="text-sm font-semibold mb-1">{p}</div>
+              <div className="text-4xl font-bold">
                 {cases.filter((c) => c.priority === p).length}
               </div>
             </div>
@@ -199,7 +216,7 @@ export default function CasesPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-100 p-6 space-y-4">
+        <div className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: 'var(--shadow)' }}>
           <div className="flex gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -244,14 +261,14 @@ export default function CasesPage() {
         </div>
 
         {/* Cases List */}
-        <div className="bg-white rounded-xl shadow-lg border-2 border-gray-100 overflow-hidden">
+        <div className="space-y-3">
           {filteredCases.length === 0 ? (
-            <div className="p-12 text-center">
-              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-lg font-medium text-gray-500 mb-2">
+            <div className="bg-white rounded-xl p-12 text-center" style={{ boxShadow: 'var(--shadow)' }}>
+              <FileText className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--color-text-secondary)', opacity: 0.3 }} />
+              <p className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
                 {searchQuery ? "Кейсы не найдены" : "Нет test cases"}
               </p>
-              <p className="text-sm text-gray-400 mb-6">
+              <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
                 {searchQuery
                   ? "Попробуйте изменить параметры поиска"
                   : "Создайте первый тестовый кейс"}
@@ -259,7 +276,8 @@ export default function CasesPage() {
               {!searchQuery && (
                 <Link
                   href="/cases/new"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-all font-medium"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all"
+                  style={{ background: 'var(--color-text)', color: 'white', boxShadow: 'var(--shadow)' }}
                 >
                   <Plus className="w-4 h-4" />
                   Создать Case
@@ -267,12 +285,20 @@ export default function CasesPage() {
               )}
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {filteredCases.map((c) => (
-                <div
-                  key={c.id}
-                  className="p-6 hover:bg-gray-50 transition-colors group"
-                >
+            filteredCases.map((c) => (
+              <div
+                key={c.id}
+                className="bg-white rounded-xl p-6 group transition-all"
+                style={{ boxShadow: 'var(--shadow)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'var(--shadow)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -338,9 +364,8 @@ export default function CasesPage() {
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </div>
       </div>
