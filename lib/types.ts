@@ -6,11 +6,23 @@ export type TestStep = {
   expected: string;
 };
 
+export type TestModule =
+  | "Smoke Tests"
+  | "Test Cases"
+  | "Test Suites"
+  | "Test Runs"
+  | "Dashboard"
+  | "UI/UX"
+  | "Integration"
+  | "Performance"
+  | "Security";
+
 export type TestCase = {
   id: string;
   title: string;
   priority: "P0" | "P1" | "P2" | "P3";
   type: string;
+  module?: TestModule;
   steps: TestStep[];
 };
 

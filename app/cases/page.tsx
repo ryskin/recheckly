@@ -10,68 +10,176 @@ import {
   Edit,
   Trash2,
   Copy,
+  Folder,
+  FolderOpen,
+  ChevronRight,
 } from "lucide-react";
-import { TestCase } from "@/lib/types";
+import { TestCase, TestModule } from "@/lib/types";
 import { getPriorityClasses, PRIORITY_COLORS } from "@/lib/utils";
+
+const MODULES: { name: TestModule; icon: string; count?: number }[] = [
+  { name: "Smoke Tests", icon: "🔥" },
+  { name: "Test Cases", icon: "📝" },
+  { name: "Test Suites", icon: "📦" },
+  { name: "Test Runs", icon: "▶️" },
+  { name: "Dashboard", icon: "📊" },
+  { name: "UI/UX", icon: "🎨" },
+  { name: "Integration", icon: "🔗" },
+  { name: "Performance", icon: "⚡" },
+  { name: "Security", icon: "🔒" },
+];
 
 export default function CasesPage() {
   const [cases, setCases] = useState<TestCase[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterType, setFilterType] = useState<string>("ALL");
+  const [selectedModule, setSelectedModule] = useState<TestModule | "ALL">("ALL");
   const [loading, setLoading] = useState(true);
   const [editingCase, setEditingCase] = useState<TestCase | null>(null);
 
   useEffect(() => {
-    // Mock data
+    // Mock data with module assignments
     setTimeout(() => {
       setCases([
         {
-          id: "c1",
-          title: "[Auth] Login with valid credentials",
-          priority: "P0",
-          type: "smoke",
-          steps: [
-            { n: 1, action: "Open app", expected: "Home visible" },
-            { n: 2, action: "Go to Login", expected: "Login form visible" },
-            { n: 3, action: "Enter valid creds & Submit", expected: "Dashboard visible" },
-          ],
-        },
-        {
-          id: "c2",
-          title: "[Auth] Wrong password error",
+          id: "RC-SMOKE-001",
+          title: "Create and Delete Test Case",
           priority: "P0",
           type: "functional",
+          module: "Smoke Tests",
           steps: [
-            { n: 1, action: "Open login", expected: "Form visible" },
-            { n: 2, action: "Enter wrong password", expected: "Error shown" },
+            { n: 1, action: "Navigate to /cases", expected: "Cases page visible" },
+            { n: 2, action: "Click 'New Case' button", expected: "Modal opens" },
+            { n: 3, action: "Enter title: 'Smoke Test Case'", expected: "Title filled" },
+            { n: 4, action: "Select priority: P1", expected: "Priority selected" },
+            { n: 5, action: "Click Save", expected: "Case created successfully" },
           ],
         },
         {
-          id: "c3",
-          title: "[Profile] Update user information",
+          id: "RC-SMOKE-002",
+          title: "Edit Test Case",
+          priority: "P0",
+          type: "functional",
+          module: "Smoke Tests",
+          steps: [
+            { n: 1, action: "Navigate to /cases", expected: "Cases page visible" },
+            { n: 2, action: "Hover over any test case", expected: "Edit icon appears" },
+            { n: 3, action: "Click Edit (pencil icon)", expected: "Edit modal opens" },
+            { n: 4, action: "Change title to 'Edited Title'", expected: "Title updated" },
+            { n: 5, action: "Click Save", expected: "Changes saved successfully" },
+          ],
+        },
+        {
+          id: "RC-CASES-001",
+          title: "Create New Test Case - Minimum Fields",
+          priority: "P0",
+          type: "functional",
+          module: "Test Cases",
+          steps: [
+            { n: 1, action: "Navigate to /cases", expected: "Cases page visible" },
+            { n: 2, action: "Click 'New Case' button", expected: "Modal opens" },
+            { n: 3, action: "Enter title: 'Login Test'", expected: "Title entered" },
+            { n: 4, action: "Select priority: P1", expected: "Priority selected" },
+            { n: 5, action: "Click Save", expected: "Case created successfully" },
+          ],
+        },
+        {
+          id: "RC-CASES-011",
+          title: "Delete Test Case",
+          priority: "P0",
+          type: "functional",
+          module: "Test Cases",
+          steps: [
+            { n: 1, action: "Navigate to /cases", expected: "Cases page visible" },
+            { n: 2, action: "Hover over test case", expected: "Delete icon appears" },
+            { n: 3, action: "Click Delete (trash icon)", expected: "Confirmation dialog appears" },
+            { n: 4, action: "Confirm deletion", expected: "Case removed from grid" },
+          ],
+        },
+        {
+          id: "RC-SUITES-001",
+          title: "Create New Suite - Minimum Fields",
+          priority: "P0",
+          type: "functional",
+          module: "Test Suites",
+          steps: [
+            { n: 1, action: "Navigate to /suites/new", expected: "Suite creation page visible" },
+            { n: 2, action: "Enter name: 'Login Suite'", expected: "Name entered" },
+            { n: 3, action: "Select 1 test case", expected: "Case selected" },
+            { n: 4, action: "Click Save", expected: "Suite created successfully" },
+          ],
+        },
+        {
+          id: "RC-RUNS-001",
+          title: "Create Run - Drag and Drop Case",
+          priority: "P0",
+          type: "functional",
+          module: "Test Runs",
+          steps: [
+            { n: 1, action: "Navigate to /dashboard/new-run", expected: "New run page visible" },
+            { n: 2, action: "Drag test case from available list", expected: "Drag animation smooth" },
+            { n: 3, action: "Drop into run builder area", expected: "Case appears in run builder" },
+          ],
+        },
+        {
+          id: "RC-UI-001",
+          title: "Design System - Color Palette",
           priority: "P1",
-          type: "functional",
+          type: "ui",
+          module: "UI/UX",
           steps: [
-            { n: 1, action: "Go to Profile", expected: "Profile page" },
-            { n: 2, action: "Edit name", expected: "Name updated" },
+            { n: 1, action: "Navigate through all pages", expected: "Background: #E8F0EF (mint-gray)" },
+            { n: 2, action: "Verify primary accent", expected: "Primary: #B8E986 (lime-green)" },
+            { n: 3, action: "Check card colors", expected: "Cards: #FFFFFF (white)" },
           ],
         },
         {
-          id: "c4",
-          title: "[Payment] Process card payment",
+          id: "RC-INT-001",
+          title: "End-to-End - Create Case → Add to Suite → Run",
           priority: "P0",
           type: "integration",
+          module: "Integration",
           steps: [
-            { n: 1, action: "Add to cart", expected: "Cart updated" },
-            { n: 2, action: "Go to checkout", expected: "Payment form" },
-            { n: 3, action: "Enter card details", expected: "Payment processed" },
+            { n: 1, action: "Create new test case", expected: "Case created" },
+            { n: 2, action: "Create new suite", expected: "Suite created" },
+            { n: 3, action: "Add case to suite", expected: "Case added" },
+            { n: 4, action: "Create run from suite", expected: "Run created" },
+          ],
+        },
+        {
+          id: "RC-PERF-001",
+          title: "Page Load Time - Home",
+          priority: "P1",
+          type: "performance",
+          module: "Performance",
+          steps: [
+            { n: 1, action: "Clear cache", expected: "Cache cleared" },
+            { n: 2, action: "Navigate to /", expected: "Page loads" },
+            { n: 3, action: "Measure load time", expected: "Load time < 2 seconds" },
+          ],
+        },
+        {
+          id: "RC-SEC-001",
+          title: "XSS - Input Sanitization",
+          priority: "P0",
+          type: "security",
+          module: "Security",
+          steps: [
+            { n: 1, action: "Enter malicious script in title", expected: "Script NOT executed" },
+            { n: 2, action: "Save and view", expected: "HTML escaped" },
           ],
         },
       ]);
       setLoading(false);
     }, 500);
   }, []);
+
+  // Calculate module counts
+  const moduleCounts = MODULES.map((m) => ({
+    ...m,
+    count: cases.filter((c) => c.module === m.name).length,
+  }));
 
   const filteredCases = cases.filter((c) => {
     const matchesSearch =
@@ -81,8 +189,9 @@ export default function CasesPage() {
 
     const matchesPriority = filterPriority === "ALL" || c.priority === filterPriority;
     const matchesType = filterType === "ALL" || c.type === filterType;
+    const matchesModule = selectedModule === "ALL" || c.module === selectedModule;
 
-    return matchesSearch && matchesPriority && matchesType;
+    return matchesSearch && matchesPriority && matchesType && matchesModule;
   });
 
   const handleDelete = (id: string) => {
@@ -194,26 +303,109 @@ export default function CasesPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="bg-white rounded-xl p-6" style={{ boxShadow: 'var(--shadow)' }}>
-            <div className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-secondary)' }}>Всего</div>
-            <div className="text-4xl font-bold" style={{ color: 'var(--color-text)' }}>{cases.length}</div>
-          </div>
-          {(["P0", "P1", "P2", "P3"] as const).map((p) => (
-            <div
-              key={p}
-              className={`rounded-xl p-6 ${getPriorityClasses(p)}`}
-              style={{ boxShadow: 'var(--shadow)' }}
-            >
-              <div className="text-sm font-semibold mb-1">{p}</div>
-              <div className="text-4xl font-bold">
-                {cases.filter((c) => c.priority === p).length}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex gap-6">
+          {/* Sidebar - Module Navigation */}
+          <div className="w-64 flex-shrink-0">
+            <div className="bg-white rounded-xl p-4 sticky top-8" style={{ boxShadow: 'var(--shadow)' }}>
+              <h3 className="text-sm font-bold mb-3 px-2" style={{ color: 'var(--color-text)' }}>
+                Модули
+              </h3>
+              <div className="space-y-1">
+                {/* All modules */}
+                <button
+                  onClick={() => setSelectedModule("ALL")}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left transition-all ${
+                    selectedModule === "ALL"
+                      ? "font-semibold"
+                      : "hover:bg-gray-50"
+                  }`}
+                  style={{
+                    background: selectedModule === "ALL" ? "var(--color-primary)" : "transparent",
+                    color: selectedModule === "ALL" ? "var(--color-text)" : "var(--color-text-secondary)",
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Folder className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm">Все тесты</span>
+                  </div>
+                  <span className="text-xs font-bold">{cases.length}</span>
+                </button>
+
+                {/* Module folders */}
+                {moduleCounts.map((module) => (
+                  <button
+                    key={module.name}
+                    onClick={() => setSelectedModule(module.name)}
+                    className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left transition-all ${
+                      selectedModule === module.name
+                        ? "font-semibold"
+                        : "hover:bg-gray-50"
+                    }`}
+                    style={{
+                      background: selectedModule === module.name ? "var(--color-primary)" : "transparent",
+                      color: selectedModule === module.name ? "var(--color-text)" : "var(--color-text-secondary)",
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {selectedModule === module.name ? (
+                        <FolderOpen className="w-4 h-4 flex-shrink-0" />
+                      ) : (
+                        <Folder className="w-4 h-4 flex-shrink-0" />
+                      )}
+                      <span className="text-sm truncate">{module.name}</span>
+                    </div>
+                    <span className="text-xs font-bold">{module.count || 0}</span>
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 space-y-6">
+            {/* Breadcrumbs */}
+            <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              <button
+                onClick={() => setSelectedModule("ALL")}
+                className={`hover:underline ${selectedModule === "ALL" ? "font-semibold" : ""}`}
+                style={{ color: selectedModule === "ALL" ? "var(--color-text)" : "var(--color-text-secondary)" }}
+              >
+                Все тесты
+              </button>
+              {selectedModule !== "ALL" && (
+                <>
+                  <ChevronRight className="w-4 h-4" />
+                  <span className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                    {selectedModule}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="bg-white rounded-xl p-6" style={{ boxShadow: 'var(--shadow)' }}>
+                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  {selectedModule === "ALL" ? "Всего" : "В модуле"}
+                </div>
+                <div className="text-4xl font-bold" style={{ color: 'var(--color-text)' }}>
+                  {selectedModule === "ALL" ? cases.length : filteredCases.length}
+                </div>
+              </div>
+              {(["P0", "P1", "P2", "P3"] as const).map((p) => (
+                <div
+                  key={p}
+                  className={`rounded-xl p-6 ${getPriorityClasses(p)}`}
+                  style={{ boxShadow: 'var(--shadow)' }}
+                >
+                  <div className="text-sm font-semibold mb-1">{p}</div>
+                  <div className="text-4xl font-bold">
+                    {filteredCases.filter((c) => c.priority === p).length}
+                  </div>
+                </div>
+              ))}
+            </div>
 
         {/* Filters */}
         <div className="bg-white rounded-xl p-6 space-y-4" style={{ boxShadow: 'var(--shadow)' }}>
@@ -366,7 +558,12 @@ export default function CasesPage() {
             ))}
           </div>
         )}
+          </div>
+          {/* End Main Content */}
+        </div>
+        {/* End Flex Container */}
       </div>
+      {/* End Max Width Container */}
 
       {/* Edit Modal */}
       {editingCase && (
