@@ -45,6 +45,7 @@ export default function CasesPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importedCases, setImportedCases] = useState<TestCase[]>([]);
   const [importSuccess, setImportSuccess] = useState(false);
+  const [importStats, setImportStats] = useState({ added: 0, skipped: 0 });
 
   useEffect(() => {
     // Mock data with module assignments
@@ -312,12 +313,20 @@ export default function CasesPage() {
   };
 
   const handleConfirmImport = () => {
-    setCases([...cases, ...importedCases]);
+    // Filter out duplicates by ID - keep existing cases, only add new ones
+    const existingIds = new Set(cases.map(c => c.id));
+    const newCases = importedCases.filter(c => !existingIds.has(c.id));
+    const duplicateCount = importedCases.length - newCases.length;
+
+    setImportStats({ added: newCases.length, skipped: duplicateCount });
+    setCases([...cases, ...newCases]);
     setImportSuccess(true);
+
     setTimeout(() => {
       setShowImportModal(false);
       setImportSuccess(false);
       setImportedCases([]);
+      setImportStats({ added: 0, skipped: 0 });
     }, 2000);
   };
 
@@ -890,7 +899,8 @@ export default function CasesPage() {
                     Успешно импортировано!
                   </h3>
                   <p style={{ color: 'var(--color-text-secondary)' }}>
-                    {importedCases.length} тест-кейсов добавлено
+                    {importStats.added} тест-кейсов добавлено
+                    {importStats.skipped > 0 && ` (${importStats.skipped} пропущено как дубликаты)`}
                   </p>
                 </div>
               ) : importedCases.length > 0 ? (
