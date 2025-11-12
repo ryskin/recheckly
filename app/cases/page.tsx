@@ -16,6 +16,7 @@ import {
   Upload,
   CheckCircle2,
   X,
+  RotateCcw,
 } from "lucide-react";
 import { TestCase, TestModule } from "@/lib/types";
 import { getPriorityClasses, PRIORITY_COLORS } from "@/lib/utils";
@@ -332,6 +333,13 @@ export default function CasesPage() {
     }
   };
 
+  const handleClearAll = () => {
+    if (confirm(`Удалить ВСЕ тест-кейсы (${cases.length})?`)) {
+      setCases([]);
+      alert('Все тест-кейсы удалены');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
@@ -382,6 +390,16 @@ export default function CasesPage() {
               </nav>
             </div>
             <div className="flex items-center gap-3">
+              {cases.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all border-2 border-red-300 text-red-600 bg-white hover:bg-red-50"
+                  title="Удалить все тест-кейсы"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Очистить
+                </button>
+              )}
               <button
                 onClick={handleLoadDemoData}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all border-2"
