@@ -8,7 +8,7 @@ type TestSuite = {
   id: string;
   name: string;
   description: string;
-  caseCount: number;
+  caseIds: string[];  // Array of test case IDs that belong to this suite
   lastRun?: string;
   createdAt: string;
 };
@@ -30,7 +30,7 @@ export default function SuitesPage() {
           id: "s1",
           name: "Auth Flow",
           description: "Тесты аутентификации и авторизации",
-          caseCount: 8,
+          caseIds: ["RC-CASES-001", "RC-CASES-004", "RC-SEC-001", "RC-SEC-004"],
           lastRun: "2025-11-10",
           createdAt: "2025-10-15",
         },
@@ -38,7 +38,7 @@ export default function SuitesPage() {
           id: "s2",
           name: "Payment Module",
           description: "Тесты платежной системы",
-          caseCount: 12,
+          caseIds: ["RC-INT-001", "RC-PERF-001"],
           lastRun: "2025-11-09",
           createdAt: "2025-10-20",
         },
@@ -46,7 +46,7 @@ export default function SuitesPage() {
           id: "s3",
           name: "Smoke Tests",
           description: "Критичные проверки перед деплоем",
-          caseCount: 6,
+          caseIds: ["RC-SMOKE-001", "RC-SMOKE-002", "RC-SMOKE-003", "RC-SMOKE-004"],
           createdAt: "2025-10-01",
         },
       ]);
@@ -110,13 +110,18 @@ export default function SuitesPage() {
 
       if (fields.length < 6) continue;
 
-      const [id, name, description, caseCount, lastRun, createdAt] = fields;
+      const [id, name, description, caseIdsStr, lastRun, createdAt] = fields;
+
+      // Parse pipe-separated case IDs: "RC-SMOKE-001|RC-SMOKE-002|RC-SMOKE-003"
+      const caseIds = caseIdsStr.trim()
+        ? caseIdsStr.split('|').map(cid => cid.trim()).filter(cid => cid.length > 0)
+        : [];
 
       const suite: TestSuite = {
         id: id.trim(),
         name: name.trim(),
         description: description.trim(),
-        caseCount: parseInt(caseCount.trim()) || 0,
+        caseIds,
         lastRun: lastRun.trim() || undefined,
         createdAt: createdAt.trim(),
       };
@@ -249,7 +254,7 @@ export default function SuitesPage() {
               Всего кейсов
             </div>
             <div className="text-3xl font-bold text-blue-900">
-              {suites.reduce((sum, s) => sum + s.caseCount, 0)}
+              {suites.reduce((sum, s) => sum + s.caseIds.length, 0)}
             </div>
           </div>
           <div className="bg-white rounded-xl p-6 border-2 border-green-100 shadow-sm">
@@ -322,13 +327,28 @@ export default function SuitesPage() {
                   <ListChecks className="w-8 h-8 text-blue-800 flex-shrink-0" />
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div className="pt-4 border-t border-gray-100 space-y-2">
                   <div className="text-sm">
-                    <div className="font-semibold text-gray-900">
-                      {suite.caseCount} тестов
+                    <div className="font-semibold text-gray-900 mb-2">
+                      {suite.caseIds.length} тест-кейсов
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {suite.caseIds.slice(0, 3).map((caseId) => (
+                        <span
+                          key={caseId}
+                          className="text-xs font-mono bg-blue-50 text-blue-700 px-2 py-0.5 rounded"
+                        >
+                          {caseId}
+                        </span>
+                      ))}
+                      {suite.caseIds.length > 3 && (
+                        <span className="text-xs text-gray-500 px-2 py-0.5">
+                          +{suite.caseIds.length - 3} ещё
+                        </span>
+                      )}
                     </div>
                     {suite.lastRun && (
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 mt-2">
                         Последний run:{" "}
                         {new Date(suite.lastRun).toLocaleDateString("ru-RU")}
                       </div>
@@ -428,8 +448,18 @@ export default function SuitesPage() {
               {/* Info */}
               <div className="bg-blue-50 rounded-lg p-4">
                 <div className="text-sm text-blue-900">
-                  <div className="font-semibold mb-1">Информация</div>
-                  <div>Тест-кейсов: {editingSuite.caseCount}</div>
+                  <div className="font-semibold mb-2">Информация</div>
+                  <div className="mb-2">Тест-кейсов: {editingSuite.caseIds.length}</div>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {editingSuite.caseIds.map((caseId) => (
+                      <span
+                        key={caseId}
+                        className="text-xs font-mono bg-white text-blue-700 px-2 py-0.5 rounded border border-blue-200"
+                      >
+                        {caseId}
+                      </span>
+                    ))}
+                  </div>
                   <div className="text-xs text-blue-700 mt-2">
                     Для изменения состава кейсов используйте страницу создания/редактирования набора
                   </div>
@@ -514,8 +544,25 @@ export default function SuitesPage() {
                           </div>
                           <div className="text-xs text-gray-500 font-mono">{suite.id}</div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div>{suite.caseCount} тестов</div>
+                        <div className="text-sm text-gray-600 mb-2">
+                          <div className="font-medium mb-1">{suite.caseIds.length} тест-кейсов:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {suite.caseIds.slice(0, 5).map((caseId) => (
+                              <span
+                                key={caseId}
+                                className="text-xs font-mono bg-blue-50 text-blue-700 px-2 py-0.5 rounded"
+                              >
+                                {caseId}
+                              </span>
+                            ))}
+                            {suite.caseIds.length > 5 && (
+                              <span className="text-xs text-gray-500 px-2 py-0.5">
+                                +{suite.caseIds.length - 5} ещё
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
                           <div>Создан: {new Date(suite.createdAt).toLocaleDateString('ru-RU')}</div>
                           {suite.lastRun && (
                             <div>Последний run: {new Date(suite.lastRun).toLocaleDateString('ru-RU')}</div>
@@ -531,8 +578,11 @@ export default function SuitesPage() {
                   <h3 className="text-xl font-bold mb-2 text-gray-900">
                     Выберите CSV файл
                   </h3>
-                  <p className="text-gray-600 mb-6">
-                    Формат: ID,Name,Description,CaseCount,LastRun,CreatedAt
+                  <p className="text-gray-600 mb-2">
+                    Формат: ID,Name,Description,CaseIds,LastRun,CreatedAt
+                  </p>
+                  <p className="text-sm text-gray-500 mb-6">
+                    CaseIds: Pipe-separated list (e.g. "RC-001|RC-002|RC-003")
                   </p>
                   <label className="inline-block">
                     <input

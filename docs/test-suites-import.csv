@@ -1,9 +1,9 @@
-ID,Name,Description,CaseCount,LastRun,CreatedAt
-RS-SUITE-001,NutriGuide Onboarding,Complete onboarding flow tests for NutriGuide app - language selection through profile creation,10,,2025-11-12
-RS-SUITE-002,Smoke Tests,Critical smoke tests covering core functionality - create/edit/delete operations,4,2025-11-11,2025-10-01
-RS-SUITE-003,Test Cases Management,Complete test case management functionality - CRUD operations and validation,8,2025-11-10,2025-10-05
-RS-SUITE-004,Test Suites Management,Test suite creation and management workflows,3,,2025-10-10
-RS-SUITE-005,UI/UX Validation,Design system consistency and responsive design tests,6,2025-11-08,2025-10-15
-RS-SUITE-006,Security Tests,XSS prevention and authentication security tests,2,,2025-10-20
-RS-SUITE-007,Performance Tests,Page load times and rendering performance validation,2,,2025-10-25
-RS-SUITE-008,Integration Tests,End-to-end workflows across modules,2,2025-11-09,2025-10-30
+ID,Name,Description,CaseIds,LastRun,CreatedAt
+RS-SUITE-001,NutriGuide Onboarding,Complete onboarding flow tests for NutriGuide app - language selection through profile creation,"RC-ONBOARDING-001|RC-ONBOARDING-002|RC-ONBOARDING-005|RC-ONBOARDING-010|RC-ONBOARDING-015|RC-ONBOARDING-016|RC-ONBOARDING-020|RC-ONBOARDING-030|RC-ONBOARDING-050|RC-ONBOARDING-090",,2025-11-12
+RS-SUITE-002,Smoke Tests,Critical smoke tests covering core functionality - create/edit/delete operations,"RC-SMOKE-001|RC-SMOKE-002|RC-SMOKE-003|RC-SMOKE-004",2025-11-11,2025-10-01
+RS-SUITE-003,Test Cases Management,Complete test case management functionality - CRUD operations and validation,"RC-CASES-001|RC-CASES-002|RC-CASES-003|RC-CASES-004|RC-CASES-011|RC-CASES-021|RC-CASES-031|RC-CASES-034|RC-CASES-041",2025-11-10,2025-10-05
+RS-SUITE-004,Test Suites Management,Test suite creation and management workflows,"RC-SUITES-001|RC-SUITES-008|RC-SUITES-021",,2025-10-10
+RS-SUITE-005,UI/UX Validation,Design system consistency and responsive design tests,"RC-UI-001|RC-UI-011|RC-UI-013|RC-UI-014|RC-UI-022|RC-UI-024",2025-11-08,2025-10-15
+RS-SUITE-006,Security Tests,XSS prevention and authentication security tests,"RC-SEC-001|RC-SEC-004",,2025-10-20
+RS-SUITE-007,Performance Tests,Page load times and rendering performance validation,"RC-PERF-001|RC-PERF-002",,2025-10-25
+RS-SUITE-008,Integration Tests,End-to-end workflows across modules,"RC-INT-001|RC-INT-010",2025-11-09,2025-10-30
