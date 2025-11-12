@@ -13,6 +13,9 @@ import {
   Folder,
   FolderOpen,
   ChevronRight,
+  Upload,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 import { TestCase, TestModule } from "@/lib/types";
 import { getPriorityClasses, PRIORITY_COLORS } from "@/lib/utils";
@@ -37,6 +40,9 @@ export default function CasesPage() {
   const [selectedModule, setSelectedModule] = useState<TestModule | "ALL">("ALL");
   const [loading, setLoading] = useState(true);
   const [editingCase, setEditingCase] = useState<TestCase | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importedCases, setImportedCases] = useState<TestCase[]>([]);
+  const [importSuccess, setImportSuccess] = useState(false);
 
   useEffect(() => {
     // Mock data with module assignments
@@ -233,6 +239,98 @@ export default function CasesPage() {
     // В реальности: await fetch(`/api/cases/${editingCase.id}`, { method: 'PUT', body: JSON.stringify(editingCase) })
   };
 
+  const parseCSV = (csvText: string): TestCase[] => {
+    const lines = csvText.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return [];
+
+    // Skip header row
+    const dataLines = lines.slice(1);
+    const parsedCases: TestCase[] = [];
+
+    for (const line of dataLines) {
+      // Parse CSV with quoted fields
+      const fields: string[] = [];
+      let currentField = '';
+      let insideQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+
+        if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === ',' && !insideQuotes) {
+          fields.push(currentField.trim());
+          currentField = '';
+        } else {
+          currentField += char;
+        }
+      }
+      fields.push(currentField.trim()); // Push last field
+
+      if (fields.length < 8) continue; // Skip invalid rows
+
+      const [id, title, priority, type, module, _prerequisites, stepsStr, expectedStr] = fields;
+
+      // Parse steps (pipe-separated format)
+      const stepActions = stepsStr.split('|').map(s => s.trim());
+      const stepExpecteds = expectedStr.split('|').map(s => s.trim());
+
+      const steps = stepActions.map((action, index) => ({
+        n: index + 1,
+        action,
+        expected: stepExpecteds[index] || '',
+      }));
+
+      const testCase: TestCase = {
+        id: id.trim(),
+        title: title.trim(),
+        priority: priority.trim() as "P0" | "P1" | "P2" | "P3",
+        type: type.toLowerCase().trim(),
+        module: module.trim() as TestModule,
+        steps,
+      };
+
+      parsedCases.push(testCase);
+    }
+
+    return parsedCases;
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const parsed = parseCSV(text);
+      setImportedCases(parsed);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleConfirmImport = () => {
+    setCases([...cases, ...importedCases]);
+    setImportSuccess(true);
+    setTimeout(() => {
+      setShowImportModal(false);
+      setImportSuccess(false);
+      setImportedCases([]);
+    }, 2000);
+  };
+
+  const handleLoadDemoData = async () => {
+    try {
+      const response = await fetch('/test-cases-import.csv');
+      const text = await response.text();
+      const parsed = parseCSV(text);
+      setCases(parsed);
+      alert(`Загружено ${parsed.length} тест-кейсов!`);
+    } catch (error) {
+      console.error('Error loading demo data:', error);
+      alert('Ошибка загрузки демо-данных');
+    }
+  };
 
   if (loading) {
     return (
@@ -283,22 +381,56 @@ export default function CasesPage() {
                 </Link>
               </nav>
             </div>
-            <Link
-              href="/cases/new"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all"
-              style={{ background: 'var(--color-text)', color: 'white', boxShadow: 'var(--shadow)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'var(--shadow)';
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              Создать Case
-            </Link>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleLoadDemoData}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all border-2"
+                style={{
+                  borderColor: 'var(--color-primary)',
+                  color: 'var(--color-text)',
+                  background: 'white'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--color-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'white';
+                }}
+              >
+                <Upload className="w-4 h-4" />
+                Demo Data
+              </button>
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all"
+                style={{ background: 'var(--color-primary)', color: 'var(--color-text)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <Upload className="w-4 h-4" />
+                Import CSV
+              </button>
+              <Link
+                href="/cases/new"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all"
+                style={{ background: 'var(--color-text)', color: 'white', boxShadow: 'var(--shadow)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow)';
+                }}
+              >
+                <Plus className="w-4 h-4" />
+                Создать Case
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -709,6 +841,133 @@ export default function CasesPage() {
                 Сохранить
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Импорт тест-кейсов</h2>
+              <button
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportedCases([]);
+                  setImportSuccess(false);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              {importSuccess ? (
+                <div className="text-center py-12">
+                  <CheckCircle2 className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--color-primary)' }} />
+                  <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>
+                    Успешно импортировано!
+                  </h3>
+                  <p style={{ color: 'var(--color-text-secondary)' }}>
+                    {importedCases.length} тест-кейсов добавлено
+                  </p>
+                </div>
+              ) : importedCases.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-blue-700" />
+                      <div>
+                        <div className="font-bold text-blue-900">
+                          Найдено {importedCases.length} тест-кейсов
+                        </div>
+                        <div className="text-sm text-blue-700">
+                          Проверьте данные перед импортом
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {importedCases.map((testCase, index) => (
+                      <div
+                        key={index}
+                        className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex gap-2 mb-2">
+                              <span className={`text-xs px-2 py-1 rounded-full border font-semibold ${getPriorityClasses(testCase.priority)}`}>
+                                {testCase.priority}
+                              </span>
+                              <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-900 border border-blue-300 uppercase font-semibold">
+                                {testCase.type}
+                              </span>
+                              {testCase.module && (
+                                <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-700 font-semibold">
+                                  {testCase.module}
+                                </span>
+                              )}
+                            </div>
+                            <div className="font-bold mb-1" style={{ color: 'var(--color-text)' }}>
+                              {testCase.title}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                              ID: {testCase.id} • {testCase.steps.length} шагов
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Upload className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--color-text-secondary)', opacity: 0.3 }} />
+                  <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>
+                    Выберите CSV файл
+                  </h3>
+                  <p className="mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+                    Формат: ID, Title, Priority, Type, Module, Prerequisites, Steps, Expected Result
+                  </p>
+                  <label className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer"
+                    style={{ background: 'var(--color-primary)', color: 'var(--color-text)' }}
+                  >
+                    <Upload className="w-5 h-5" />
+                    Выбрать файл
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {importedCases.length > 0 && !importSuccess && (
+              <div className="p-6 border-t border-gray-200 flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setImportedCases([]);
+                  }}
+                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={handleConfirmImport}
+                  className="flex-1 px-6 py-3 rounded-lg transition-colors font-medium text-white"
+                  style={{ background: 'var(--color-text)' }}
+                >
+                  Импортировать {importedCases.length} кейсов
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
