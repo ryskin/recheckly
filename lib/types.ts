@@ -15,7 +15,8 @@ export type TestModule =
   | "UI/UX"
   | "Integration"
   | "Performance"
-  | "Security";
+  | "Security"
+  | "Onboarding";
 
 export type TestCase = {
   id: string;

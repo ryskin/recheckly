@@ -31,6 +31,7 @@ const MODULES: { name: TestModule; icon: string; count?: number }[] = [
   { name: "Integration", icon: "🔗" },
   { name: "Performance", icon: "⚡" },
   { name: "Security", icon: "🔒" },
+  { name: "Onboarding", icon: "👋" },
 ];
 
 export default function CasesPage() {
