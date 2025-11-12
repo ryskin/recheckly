@@ -16,6 +16,7 @@ type TestSuite = {
 export default function SuitesPage() {
   const [suites, setSuites] = useState<TestSuite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingSuite, setEditingSuite] = useState<TestSuite | null>(null);
 
   useEffect(() => {
     // Mock data
@@ -48,6 +49,35 @@ export default function SuitesPage() {
       setLoading(false);
     }, 500);
   }, []);
+
+  const handleEdit = (id: string) => {
+    const suite = suites.find((s) => s.id === id);
+    if (suite) {
+      setEditingSuite(suite);
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    const suite = suites.find((s) => s.id === id);
+    if (!suite) return;
+
+    if (confirm(`Удалить набор "${suite.name}"?\n\nТест-кейсы останутся в системе.`)) {
+      setSuites(suites.filter((s) => s.id !== id));
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingSuite) return;
+
+    setSuites(
+      suites.map((s) =>
+        s.id === editingSuite.id
+          ? { ...editingSuite }
+          : s
+      )
+    );
+    setEditingSuite(null);
+  };
 
   if (loading) {
     return (
@@ -168,10 +198,18 @@ export default function SuitesPage() {
                   <PlayCircle className="w-4 h-4" />
                   Запустить
                 </Link>
-                <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
-                  <Edit className="w-4 h-4 text-gray-600" />
+                <button
+                  onClick={() => handleEdit(suite.id)}
+                  className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Редактировать"
+                >
+                  <Edit className="w-4 h-4 text-blue-700" />
                 </button>
-                <button className="p-2 hover:bg-red-50 rounded-lg transition-colors">
+                <button
+                  onClick={() => handleDelete(suite.id)}
+                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Удалить"
+                >
                   <Trash2 className="w-4 h-4 text-red-600" />
                 </button>
               </div>
@@ -193,6 +231,82 @@ export default function SuitesPage() {
           </Link>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingSuite && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Редактировать набор
+              </h2>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Название набора
+                </label>
+                <input
+                  type="text"
+                  value={editingSuite.name}
+                  onChange={(e) =>
+                    setEditingSuite({ ...editingSuite, name: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                  placeholder="Название набора"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Описание
+                </label>
+                <textarea
+                  value={editingSuite.description}
+                  onChange={(e) =>
+                    setEditingSuite({
+                      ...editingSuite,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none resize-none"
+                  rows={3}
+                  placeholder="Описание набора"
+                />
+              </div>
+
+              {/* Info */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="text-sm text-blue-900">
+                  <div className="font-semibold mb-1">Информация</div>
+                  <div>Тест-кейсов: {editingSuite.caseCount}</div>
+                  <div className="text-xs text-blue-700 mt-2">
+                    Для изменения состава кейсов используйте страницу создания/редактирования набора
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={() => setEditingSuite(null)}
+                className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="flex-1 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
+              >
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
