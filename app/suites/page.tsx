@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Plus, ListChecks, PlayCircle, Edit, Trash2 } from "lucide-react";
+import { Plus, ListChecks, PlayCircle, Edit, Trash2, Upload, CheckCircle2, X, RotateCcw } from "lucide-react";
 
 type TestSuite = {
   id: string;
@@ -17,6 +17,10 @@ export default function SuitesPage() {
   const [suites, setSuites] = useState<TestSuite[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingSuite, setEditingSuite] = useState<TestSuite | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importedSuites, setImportedSuites] = useState<TestSuite[]>([]);
+  const [importSuccess, setImportSuccess] = useState(false);
+  const [importStats, setImportStats] = useState({ added: 0, skipped: 0 });
 
   useEffect(() => {
     // Mock data
@@ -77,6 +81,105 @@ export default function SuitesPage() {
       )
     );
     setEditingSuite(null);
+  };
+
+  const parseCSV = (csvText: string): TestSuite[] => {
+    const lines = csvText.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return [];
+
+    const dataLines = lines.slice(1);
+    const parsedSuites: TestSuite[] = [];
+
+    for (const line of dataLines) {
+      const fields: string[] = [];
+      let currentField = '';
+      let insideQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === ',' && !insideQuotes) {
+          fields.push(currentField.trim());
+          currentField = '';
+        } else {
+          currentField += char;
+        }
+      }
+      fields.push(currentField.trim());
+
+      if (fields.length < 6) continue;
+
+      const [id, name, description, caseCount, lastRun, createdAt] = fields;
+
+      const suite: TestSuite = {
+        id: id.trim(),
+        name: name.trim(),
+        description: description.trim(),
+        caseCount: parseInt(caseCount.trim()) || 0,
+        lastRun: lastRun.trim() || undefined,
+        createdAt: createdAt.trim(),
+      };
+
+      parsedSuites.push(suite);
+    }
+
+    return parsedSuites;
+  };
+
+  const handleLoadDemoData = async () => {
+    try {
+      const response = await fetch('/test-suites-import.csv');
+      const text = await response.text();
+      const parsed = parseCSV(text);
+
+      // Filter duplicates
+      const existingIds = new Set(suites.map(s => s.id));
+      const newSuites = parsed.filter(s => !existingIds.has(s.id));
+
+      setSuites([...suites, ...newSuites]);
+      alert(`Загружено ${newSuites.length} наборов тестов!${parsed.length > newSuites.length ? ` (${parsed.length - newSuites.length} пропущено как дубликаты)` : ''}`);
+    } catch (error) {
+      console.error('Error loading demo data:', error);
+      alert('Ошибка загрузки демо-данных');
+    }
+  };
+
+  const handleClearAll = () => {
+    if (confirm(`Удалить ВСЕ наборы тестов (${suites.length})?`)) {
+      setSuites([]);
+      alert('Все наборы удалены');
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const parsed = parseCSV(text);
+      setImportedSuites(parsed);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleConfirmImport = () => {
+    const existingIds = new Set(suites.map(s => s.id));
+    const newSuites = importedSuites.filter(s => !existingIds.has(s.id));
+    const duplicateCount = importedSuites.length - newSuites.length;
+
+    setImportStats({ added: newSuites.length, skipped: duplicateCount });
+    setSuites([...suites, ...newSuites]);
+    setImportSuccess(true);
+
+    setTimeout(() => {
+      setShowImportModal(false);
+      setImportSuccess(false);
+      setImportedSuites([]);
+      setImportStats({ added: 0, skipped: 0 });
+    }, 2000);
   };
 
   if (loading) {
@@ -154,6 +257,50 @@ export default function SuitesPage() {
               Активных runs
             </div>
             <div className="text-3xl font-bold text-green-700">1</div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-3 items-center">
+          <button
+            onClick={handleLoadDemoData}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all border-2"
+            style={{
+              borderColor: 'var(--color-primary)',
+              color: 'var(--color-text)',
+              background: 'white'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'white';
+            }}
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            Demo Data
+          </button>
+
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all border-2 border-blue-500 text-blue-700 bg-white hover:bg-blue-50"
+          >
+            <Upload className="w-4 h-4" />
+            Import CSV
+          </button>
+
+          {suites.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all border-2 border-red-500 text-red-700 bg-white hover:bg-red-50"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Очистить
+            </button>
+          )}
+
+          <div className="text-sm text-gray-600 ml-auto">
+            {suites.length} наборов
           </div>
         </div>
 
@@ -304,6 +451,124 @@ export default function SuitesPage() {
                 Сохранить
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Импорт наборов тестов</h2>
+              <button
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportedSuites([]);
+                  setImportSuccess(false);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              {importSuccess ? (
+                <div className="text-center py-12">
+                  <CheckCircle2 className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--color-primary)' }} />
+                  <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>
+                    Успешно импортировано!
+                  </h3>
+                  <p style={{ color: 'var(--color-text-secondary)' }}>
+                    {importStats.added} наборов добавлено
+                    {importStats.skipped > 0 && ` (${importStats.skipped} пропущено как дубликаты)`}
+                  </p>
+                </div>
+              ) : importedSuites.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-blue-700" />
+                      <div>
+                        <div className="font-bold text-blue-900">
+                          Найдено {importedSuites.length} наборов
+                        </div>
+                        <div className="text-sm text-blue-700">
+                          Проверьте данные перед импортом
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {importedSuites.map((suite) => (
+                      <div
+                        key={suite.id}
+                        className="bg-white border-2 border-gray-200 rounded-lg p-4"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="font-bold text-gray-900">{suite.name}</div>
+                            <div className="text-sm text-gray-600">{suite.description}</div>
+                          </div>
+                          <div className="text-xs text-gray-500 font-mono">{suite.id}</div>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <div>{suite.caseCount} тестов</div>
+                          <div>Создан: {new Date(suite.createdAt).toLocaleDateString('ru-RU')}</div>
+                          {suite.lastRun && (
+                            <div>Последний run: {new Date(suite.lastRun).toLocaleDateString('ru-RU')}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Upload className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-xl font-bold mb-2 text-gray-900">
+                    Выберите CSV файл
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Формат: ID,Name,Description,CaseCount,LastRun,CreatedAt
+                  </p>
+                  <label className="inline-block">
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <span className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 cursor-pointer inline-flex items-center gap-2 font-medium">
+                      <Upload className="w-4 h-4" />
+                      Выбрать файл
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {importedSuites.length > 0 && !importSuccess && (
+              <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setImportedSuites([]);
+                  }}
+                  className="px-6 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50 font-medium"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={handleConfirmImport}
+                  className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 font-medium"
+                >
+                  Импортировать {importedSuites.length} наборов
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
