@@ -478,9 +478,10 @@ export default function CasesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCases.map((c) => (
-              <div
+              <Link
                 key={c.id}
-                className="bg-white rounded-xl p-5 group transition-all flex flex-col"
+                href={`/cases/${c.id}`}
+                className="bg-white rounded-xl p-5 group transition-all flex flex-col cursor-pointer"
                 style={{ boxShadow: 'var(--shadow)' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
@@ -504,22 +505,34 @@ export default function CasesPage() {
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() => handleEdit(c.id)}
-                      className="p-1.5 hover:bg-blue-50 text-blue-800 rounded-lg transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEdit(c.id);
+                      }}
+                      className="p-1.5 hover:bg-blue-50 text-blue-800 rounded-lg transition-colors z-10"
                       title="Редактировать"
                     >
                       <Edit className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => handleCopy(c.id)}
-                      className="p-1.5 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleCopy(c.id);
+                      }}
+                      className="p-1.5 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors z-10"
                       title="Копировать"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => handleDelete(c.id)}
-                      className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDelete(c.id);
+                      }}
+                      className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition-colors z-10"
                       title="Удалить"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -554,7 +567,7 @@ export default function CasesPage() {
                     </div>
                   )}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
